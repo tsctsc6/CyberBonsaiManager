@@ -4,3 +4,6 @@ args = "1280x720"
 
 [[tasks]]
 type = "EmulatorStartup"
+
+[[tasks]]
+type = "CloseApp"

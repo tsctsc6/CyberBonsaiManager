@@ -41,6 +41,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                     case "EmulatorStartup": await EmulatorStartupHandlerAsync(task); break;
                     case "Sleep": await SleepHandlerAsync(task); break;
                     case "Script": await ScriptHandlerAsync(task); break;
+                    case "CloseApp": CloseAppHandler(task); break;
                 }
             }
         }
@@ -50,6 +51,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             throw;
         }
     }
+
+    private void CloseAppHandler(AppTaskBase task)
+    {
+        App.Current.Shutdown();
+    }
+
     private static async Task SleepHandlerAsync(AppTaskBase task)
     {
         if (int.TryParse(task.Args, out int t))
