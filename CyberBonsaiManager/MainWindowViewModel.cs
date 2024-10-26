@@ -47,7 +47,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
         catch (Exception e)
         {
-            Log.Fatal("", e);
+            Log.Fatal(e, "Error:");
             throw;
         }
     }
