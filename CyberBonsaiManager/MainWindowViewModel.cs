@@ -39,6 +39,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             var appTasks = configuration.GetSection("tasks").GetChildren();
             foreach (var task in appTasks)
             {
+                Log.Information("开始任务: {t}", task["name"]);
                 switch (task["type"])
                 {
                     case "TestConnectionStatus": await TestConnectionStatusHandlerAsync(task); break;
