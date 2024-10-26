@@ -139,11 +139,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             try
             {
-                Encoding.GetEncoding(task.Encoding);
+                encoding = Encoding.GetEncoding(task.Encoding);
             }
             catch (ArgumentException ex)
             {
                 Log.Error(ex.Message);
+                return;
             }
         }
         scriptProcess = new Process()
