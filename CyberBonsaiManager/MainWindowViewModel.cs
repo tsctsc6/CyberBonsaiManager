@@ -189,8 +189,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 if (line[..28].Contains("INF")) Log.Information(line);
                 else if (line[..28].Contains("WAR")) Log.Warning(line);
+                else if (line[..28].Contains("ERR")) Log.Error(line);
             }
-            Log.Error(line);
+            else Log.Error(line);
         }
     }
     
