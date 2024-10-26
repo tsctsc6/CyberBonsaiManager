@@ -66,8 +66,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private static async Task SleepHandlerAsync(IConfigurationSection task)
     {
-        if (int.TryParse(task["time_in_ms"], out var t))
-            await Task.Delay(t);
+        await Task.Delay(task.GetValue<int>("time_in_ms"));
     }
 
     private async Task TestConnectionStatusHandlerAsync(IConfigurationSection task)
