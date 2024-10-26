@@ -18,7 +18,6 @@ namespace CyberBonsaiManager;
 public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     private static readonly HttpClient client = new();
-    private IConfigurationRoot configuration;
     private Process? emulatorProcess;
     private Process? scriptProcess;
     private CancellationTokenSource cts = new();
@@ -32,7 +31,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         try
         {
-            configuration = new ConfigurationBuilder()
+            var configuration = new ConfigurationBuilder()
                 .AddJsonFile(App.Current.Services.GetRequiredService<AppConfig>().Task.Path, optional: false,
                     reloadOnChange: false)
                 .Build();
