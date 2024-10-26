@@ -1,0 +1,14 @@
+{
+    "tasks": [
+        {
+            "type": "ChangeResolution",
+            "resolution": "1280x720"
+        },
+        {
+            "type": "EmulatorStartup"
+        },
+        {
+            "type": "CloseApp"
+        }
+    ]
+}

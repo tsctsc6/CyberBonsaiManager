@@ -8,18 +8,20 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CyberBonsaiManager.Models;
 using CyberBonsaiManager.Utilities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualBasic;
 using Serilog;
-using Tomlyn;
+using Task = System.Threading.Tasks.Task;
 
 namespace CyberBonsaiManager;
 
 public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     private static readonly HttpClient client = new();
+    private IConfigurationRoot configuration;
     private Process? emulatorProcess;
     private Process? scriptProcess;
+    private CancellationTokenSource cts = new();
     public ObservableCollection<StringWithColor> ScriptOutput { get; } = [];
 
     [ObservableProperty]
@@ -30,11 +32,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         try
         {
-            var appTasks = Toml.ToModel<AppTasks>(await File.ReadAllTextAsync(App.Current.Services.GetRequiredService<AppConfig>().Tasks.ConfigPath));
-            var appTaskPures = appTasks.Tasks.Select(AppTaskBase.Parse);
-            foreach (var task in appTaskPures)
+            configuration = new ConfigurationBuilder()
+                .AddJsonFile(App.Current.Services.GetRequiredService<AppConfig>().Task.Path, optional: false,
+                    reloadOnChange: false)
+                .Build();
+            var appTasks = configuration.GetSection("tasks").GetChildren();
+            foreach (var task in appTasks)
             {
-                switch (task.Type)
+                switch (task["type"])
                 {
                     case "TestConnectionStatus": await TestConnectionStatusHandlerAsync(task); break;
                     case "ChangeResolution": await ChangeResolutionHandlerAsync(task); break;
@@ -52,18 +57,20 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void CloseAppHandler(AppTaskBase task)
+    private void CloseAppHandler(IConfigurationSection task)
     {
-        App.Current.Shutdown();
+        if (int.TryParse(task["exit_code"], out var exitCode))
+            App.Current.Shutdown(exitCode);
+        else App.Current.Shutdown();
     }
 
-    private static async Task SleepHandlerAsync(AppTaskBase task)
+    private static async Task SleepHandlerAsync(IConfigurationSection task)
     {
-        if (int.TryParse(task.Args, out int t))
+        if (int.TryParse(task["time_in_ms"], out var t))
             await Task.Delay(t);
     }
 
-    private async Task TestConnectionStatusHandlerAsync(AppTaskBase task)
+    private async Task TestConnectionStatusHandlerAsync(IConfigurationSection task)
     {
         Log.Information("正在检测网络连接...");
         var resp = await client.GetAsync("http://www.msftconnecttest.com/redirect");
@@ -77,7 +84,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task ChangeResolutionHandlerAsync(AppTaskBase task)
+    private async Task ChangeResolutionHandlerAsync(IConfigurationSection task)
     {
         switch (App.Current.Services.GetRequiredService<AppConfig>().Emulator.Type)
         {
@@ -85,36 +92,34 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task ChangeBlueStackResolutionHandlerAsync(AppTaskBase task)
+    private async Task ChangeBlueStackResolutionHandlerAsync(IConfigurationSection task)
     {
-        if (task.Args is null) return;
+        var resolution = task["resolution"];
+        if (resolution is null) return;
         emulatorProcess?.Kill();
         emulatorProcess = null;
-        var r = task.Args.Split('x');
+        var r = resolution.Split('x');
         if (r.Length != 2) return;
-        int width = int.Parse(r[0]);
-        int height = int.Parse(r[1]);
+        var width = int.Parse(r[0]);
+        var height = int.Parse(r[1]);
         Log.Information("修改分辨率为 {w}x{h}", width, height);
-        var BSconf = await File.ReadAllLinesAsync(App.Current.Services.GetRequiredService<AppConfig>().Emulator.ConfigPath);
-        BSconf = BSconf.Select(s =>
+        var conf = await File.ReadAllLinesAsync(App.Current.Services.GetRequiredService<AppConfig>().Emulator.ConfigPath);
+        var conf2 = conf.Select(s =>
         {
             if (s.StartsWith("bst.instance.Nougat64.fb_height"))
             {
                 return ValueRegex().Replace(s, m => $"\"{height}\"");
             }
-            else if (s.StartsWith("bst.instance.Nougat64.fb_width"))
+            if (s.StartsWith("bst.instance.Nougat64.fb_width"))
             {
                 return ValueRegex().Replace(s, m => $"\"{width}\"");
             }
-            else
-            {
-                return s;
-            }
-        }).ToArray();
-        await File.WriteAllLinesAsync(App.Current.Services.GetRequiredService<AppConfig>().Emulator.ConfigPath, BSconf);
+            return s;
+        });
+        await File.WriteAllLinesAsync(App.Current.Services.GetRequiredService<AppConfig>().Emulator.ConfigPath, conf2);
     }
 
-    private async Task EmulatorStartupHandlerAsync(AppTaskBase task)
+    private async Task EmulatorStartupHandlerAsync(IConfigurationSection task)
     {
         Log.Information("启动模拟器...");
         emulatorProcess ??= new()
@@ -131,15 +136,17 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         await WindowsHelper.MinimzeProcessMainWindowsAsync(emulatorProcess);
     }
 
-    private async Task ScriptHandlerAsync(AppTaskBase task)
+    private async Task ScriptHandlerAsync(IConfigurationSection task)
     {
-        if (task.FilePath is null) return;
+        var filePath = task["file_path"];
+        if (string.IsNullOrEmpty(filePath)) return;
         var encoding = Encoding.Default;
-        if (!string.IsNullOrEmpty(task.Encoding))
+        var encodingString = task["encoding"];
+        if (!string.IsNullOrEmpty(encodingString))
         {
             try
             {
-                encoding = Encoding.GetEncoding(task.Encoding);
+                encoding = Encoding.GetEncoding(encodingString);
             }
             catch (ArgumentException ex)
             {
@@ -147,13 +154,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 return;
             }
         }
-        scriptProcess = new Process()
+        scriptProcess = new Process
         {
             StartInfo = new()
             {
-                FileName = Path.GetFullPath(task.FilePath),
-                Arguments = task.Args,
-                WorkingDirectory = Path.GetFullPath(task.WorkPath ?? ".\\"),
+                FileName = Path.GetFullPath(filePath),
+                Arguments = task["args"],
+                WorkingDirectory = Path.GetFullPath(task["work_path"] ?? ".\\"),
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -163,27 +170,31 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         };
         scriptProcess.Start();
         await Task.WhenAny(scriptProcess.WaitForExitAsync(),
-            ListenProcessStandardOutputAsync(scriptProcess),
-            ListenProcessStandardErrorAsync(scriptProcess));
+            ListenProcessStandardOutputAsync(scriptProcess, cts.Token),
+            ListenProcessStandardErrorAsync(scriptProcess, cts.Token));
+        await cts.CancelAsync();
+        cts = new();
     }
 
     [GeneratedRegex("\"(.*?)\"")]
     private static partial Regex ValueRegex();
 
-    private async Task ListenProcessStandardOutputAsync(Process process)
+    private async Task ListenProcessStandardOutputAsync(Process process, CancellationToken cancellationToken = default)
     {
         while (true)
         {
-            var line = await process.StandardOutput.ReadLineAsync();
+            var line = await process.StandardOutput.ReadLineAsync(cancellationToken);
+            if (cancellationToken.IsCancellationRequested) break;
             if (!string.IsNullOrWhiteSpace(line)) Log.Information(line);
         }
     }
     
-    private async Task ListenProcessStandardErrorAsync(Process process)
+    private async Task ListenProcessStandardErrorAsync(Process process, CancellationToken cancellationToken = default)
     {
         while (true)
         {
-            var line = await process.StandardError.ReadLineAsync();
+            var line = await process.StandardError.ReadLineAsync(cancellationToken);
+            if (cancellationToken.IsCancellationRequested) break;
             if (string.IsNullOrWhiteSpace(line)) continue;
             if (line.Length > 27)
             {

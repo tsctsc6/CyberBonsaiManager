@@ -1,0 +1,11 @@
+{
+  "emulator": {
+    "type": "BlueStack",
+    "config_path": "D:\\ProgramFiles\\BlueStacks_nxt\\bluestacks.conf",
+    "path": "C:\\Program Files\\BlueStacks_nxt\\HD-Player.exe",
+    "args": "--instance Nougat64"
+  },
+  "task": {
+    "path": ".\\test.json"
+  }
+}

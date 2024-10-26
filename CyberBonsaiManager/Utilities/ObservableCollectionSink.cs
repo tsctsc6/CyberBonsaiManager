@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using System.Windows.Media;
-using CyberBonsaiManager.Models;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Display;

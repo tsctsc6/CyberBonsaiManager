@@ -1,10 +1,12 @@
 ﻿using System.IO;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 using System.Windows;
 using CyberBonsaiManager.Models;
 using CyberBonsaiManager.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Tomlyn;
 
 namespace CyberBonsaiManager;
 
@@ -19,9 +21,16 @@ public partial class App : Application
     public App()
     {
         Services = new ServiceCollection()
-            .AddSingleton<MainWindow>(sp => new MainWindow(){DataContext = sp.GetRequiredService<MainWindowViewModel>()})
+            .AddSingleton<MainWindow>(sp => new MainWindow{DataContext = sp.GetRequiredService<MainWindowViewModel>()})
             .AddSingleton<MainWindowViewModel>()
-            .AddSingleton<AppConfig>(_ => Toml.ToModel<AppConfig>(File.ReadAllText(@".\config.toml")))
+            .AddSingleton<JsonSerializerOptions>(_ => new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+            })
+            .AddSingleton<AppConfig>(sp => JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(@".\config.json"),
+                sp.GetRequiredService<JsonSerializerOptions>()) ?? throw new InvalidOperationException("Failed to load config"))
             .BuildServiceProvider();
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Async(a => a.Console())
