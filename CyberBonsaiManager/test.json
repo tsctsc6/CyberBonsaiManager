@@ -1,17 +1,21 @@
 {
     "tasks": [
         {
+            "name": "更改分辨率",
             "type": "ChangeResolution",
             "resolution": "1280x720"
         },
         {
+            "name": "启动模拟器",
             "type": "EmulatorStartup"
         },
         {
+            "name": "等待模拟器启动完毕",
             "type": "Sleep",
             "time_in_ms": 6000
         },
         {
+            "name": "退出应用",
             "type": "CloseApp"
         }
     ]
