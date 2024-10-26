@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CyberBonsaiManager.Models;
 using CyberBonsaiManager.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,13 +28,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task RunAsync()
     {
+        VariantsAnalyzer analyzer = new();
+        var targetTaskSection = analyzer.Analyze(App.Current.Services.GetRequiredService<IConfigurationRoot>()
+            .GetRequiredSection("target_task"));
         try
         {
             var configuration = new ConfigurationBuilder()
-                .AddJsonFile(App.Current.Services.GetRequiredService<AppConfig>().Task.Path, optional: false,
-                    reloadOnChange: false)
+                .AddJsonFile(targetTaskSection["path"]!,
+                    optional: false, reloadOnChange: false)
                 .Build();
-            var appTasks = configuration.GetSection("tasks").GetChildren();
+            var appTasks = configuration.GetRequiredSection("tasks").GetChildren();
             foreach (var task in appTasks)
             {
                 Log.Information("开始任务: {t}", task["name"]);
@@ -85,7 +87,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task ChangeResolutionHandlerAsync(IConfigurationSection task)
     {
-        switch (App.Current.Services.GetRequiredService<AppConfig>().Emulator.Type)
+        switch (App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:type"])
         {
             case "BlueStack": await ChangeBlueStackResolutionHandlerAsync(task); break;
         }
@@ -102,7 +104,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         var width = int.Parse(r[0]);
         var height = int.Parse(r[1]);
         Log.Information("修改分辨率为 {w}x{h}", width, height);
-        var conf = await File.ReadAllLinesAsync(App.Current.Services.GetRequiredService<AppConfig>().Emulator.ConfigPath);
+        var conf = await File.ReadAllLinesAsync(App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:config_path"]!);
         var conf2 = conf.Select(s =>
         {
             if (s.StartsWith("bst.instance.Nougat64.fb_height"))
@@ -115,7 +117,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             }
             return s;
         });
-        await File.WriteAllLinesAsync(App.Current.Services.GetRequiredService<AppConfig>().Emulator.ConfigPath, conf2);
+        await File.WriteAllLinesAsync(App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:config_path"]!, conf2);
     }
 
     private async Task EmulatorStartupHandlerAsync(IConfigurationSection task)
@@ -125,8 +127,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             StartInfo = new()
             {
-                FileName = App.Current.Services.GetRequiredService<AppConfig>().Emulator.Path,
-                Arguments = App.Current.Services.GetRequiredService<AppConfig>().Emulator.Args,
+                FileName = App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:path"]!,
+                Arguments = App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:args"]!,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             }

@@ -3,8 +3,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using System.Windows;
-using CyberBonsaiManager.Models;
 using CyberBonsaiManager.Utilities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -29,8 +29,8 @@ public partial class App : Application
                 WriteIndented = true,
                 Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
             })
-            .AddSingleton<AppConfig>(sp => JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(@".\config.json"),
-                sp.GetRequiredService<JsonSerializerOptions>()) ?? throw new InvalidOperationException("Failed to load config"))
+            .AddSingleton<IConfigurationRoot>(_ => new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false).Build())
             .BuildServiceProvider();
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Async(a => a.Console())
