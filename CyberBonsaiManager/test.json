@@ -8,6 +8,10 @@
             "type": "EmulatorStartup"
         },
         {
+            "type": "Sleep",
+            "time_in_ms": 6000
+        },
+        {
             "type": "CloseApp"
         }
     ]
