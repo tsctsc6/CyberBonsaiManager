@@ -184,7 +184,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         while (true)
         {
             var line = await process.StandardError.ReadLineAsync();
-            if (!string.IsNullOrWhiteSpace(line)) Log.Error(line);
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (line.Length > 27)
+            {
+                if (line[..28].Contains("INF")) Log.Information(line);
+                else if (line[..28].Contains("WAR")) Log.Warning(line);
+            }
+            Log.Error(line);
         }
     }
     
