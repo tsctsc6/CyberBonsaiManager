@@ -24,18 +24,29 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool autoScrollToBottom = true;
+
+    public string[] CliArgs { get; set; } = [];
     
     [RelayCommand]
     private async Task RunAsync()
     {
-        VariantsAnalyzer analyzer = new();
-        var targetTaskSection = analyzer.Analyze(App.Current.Services.GetRequiredService<IConfigurationRoot>()
-            .GetRequiredSection("target_task"));
-        Log.Information("打开配置文件: {c}", targetTaskSection["path"]);
+        string? targetPath;
+        if (CliArgs.Length == 0)
+        {
+            VariantsAnalyzer analyzer = new();
+            var targetTaskSection = analyzer.Analyze(App.Current.Services.GetRequiredService<IConfigurationRoot>()
+                .GetRequiredSection("target_task"));
+            targetPath = targetTaskSection["path"];
+        }
+        else
+        {
+            targetPath = CliArgs[0];
+        }
+        Log.Information("打开配置文件: {c}", targetPath);
         try
         {
             var configuration = new ConfigurationBuilder()
-                .AddJsonFile(targetTaskSection["path"]!,
+                .AddJsonFile(targetPath!,
                     optional: false, reloadOnChange: false)
                 .Build();
             var appTasks = configuration.GetRequiredSection("tasks").GetChildren();

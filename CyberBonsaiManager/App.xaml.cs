@@ -42,6 +42,7 @@ public partial class App : Application
 
     private void App_OnStartup(object sender, StartupEventArgs e)
     {
+        Services.GetRequiredService<MainWindowViewModel>().CliArgs = e.Args;
         Services.GetRequiredService<MainWindow>().Show();
         Services.GetRequiredService<MainWindowViewModel>().RunCommand.Execute(null);
     }
