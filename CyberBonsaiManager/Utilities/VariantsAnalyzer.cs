@@ -49,11 +49,19 @@ public class VariantsAnalyzer
             "And" => AndConditions(section.GetSection("conditions").GetChildren()),
             "Or" => OrConditions(section.GetSection("conditions").GetChildren()),
             "Time" => TimeCondition(section["start"], section["end"]),
+            "Weekday" => WeekdayCondition(section.GetSection("weekdays").Get<string[]>()),
             "True" => true,
             _ => false
         };
         if (section.GetValue<bool>("invert")) return !result;
         return result;
+    }
+
+    private bool WeekdayCondition(string[]? weekdays)
+    {
+        if (weekdays is null) return false;
+        var date = DateOnly.FromDateTime(DateTime.Now);
+        return weekdays.Any(weekday => date.DayOfWeek.ToString().StartsWith(weekday, true, null));
     }
 
     private bool OrConditions(IEnumerable<IConfigurationSection> children)
