@@ -17,7 +17,7 @@ namespace CyberBonsaiManager;
 
 public partial class MainWindowViewModel : ObservableObject, IDisposable
 {
-    private static readonly HttpClient client = new();
+    private readonly HttpClient client;
     private Process? emulatorProcess;
     private Process? scriptProcess;
     private CancellationTokenSource cts = new();
@@ -27,6 +27,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private bool autoScrollToBottom = true;
 
     public string[] CliArgs { get; set; } = [];
+
+    public MainWindowViewModel(HttpClient client)
+    {
+        this.client = client;
+    }
     
     [RelayCommand]
     private async Task RunAsync()
