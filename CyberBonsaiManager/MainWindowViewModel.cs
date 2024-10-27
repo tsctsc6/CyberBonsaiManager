@@ -187,6 +187,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             scriptProcess.ListenProcessStandardOutputAsync(cts.Token),
             scriptProcess.ListenProcessStandardErrorAsync(cts.Token));
         await cts.CancelAsync();
+        cts.Dispose();
         cts = new();
     }
 
