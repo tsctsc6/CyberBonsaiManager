@@ -50,12 +50,20 @@ public class VariantsAnalyzer
             "Or" => OrConditions(section.GetSection("conditions").GetChildren()),
             "Time" => TimeCondition(section["start"], section["end"]),
             "Weekday" => WeekdayCondition(section.GetSection("weekdays").Get<string[]>()),
+            "DayMod" => DayModCondition(section.GetValue<int>("divisor"), section.GetValue<int>("remainder")),
             "True" => true,
             _ => false
         };
         if (section.GetValue<bool>("invert")) return !result;
         return result;
     }
+
+    private bool DayModCondition(int divisor, int remainder)
+    {
+        var date = DateOnly.FromDateTime(DateTime.Now);
+        return date.DayNumber % divisor == remainder;
+    }
+
 
     private bool WeekdayCondition(string[]? weekdays)
     {
