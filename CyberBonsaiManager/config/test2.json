@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "name": "检查网络状态",
+      "type": "TestConnectionStatus"
+    },
+    {
+      "name": "检查明日方舟更新",
+      "type": "ArknightsUpdate"
+    },
+    {
+      "name": "退出应用",
+      "type": "CloseApp"
+    }
+  ]
+}
