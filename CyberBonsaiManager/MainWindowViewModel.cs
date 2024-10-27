@@ -98,7 +98,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private async Task TestConnectionStatusHandlerAsync(IConfigurationSection task)
     {
         Log.Information("正在检测网络连接...");
-        var resp = await client.GetAsync("http://www.msftconnecttest.com/redirect");
+        var resp = await client.GetAsync("http://www.msftconnecttest.com/connecttest.txt");
         try
         {
             resp.EnsureSuccessStatusCode();

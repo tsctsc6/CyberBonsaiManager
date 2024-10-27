@@ -23,8 +23,7 @@ public partial class App : Application
     public App()
     {
         Services = new ServiceCollection()
-            .AddSingleton<HttpClientHandler>(_ => new HttpClientHandler{AllowAutoRedirect = false})
-            .AddSingleton<HttpClient>()
+            .AddSingleton<HttpClient>(_ => new HttpClient(new HttpClientHandler{AllowAutoRedirect = false}))
             .AddTransient<ArknightsUpdater>()
             .AddSingleton<MainWindow>(sp => new MainWindow{DataContext = sp.GetRequiredService<MainWindowViewModel>()})
             .AddSingleton<MainWindowViewModel>()
