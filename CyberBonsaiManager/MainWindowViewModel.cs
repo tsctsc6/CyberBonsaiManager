@@ -184,41 +184,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         };
         scriptProcess.Start();
         await Task.WhenAny(scriptProcess.WaitForExitAsync(),
-            ListenProcessStandardOutputAsync(scriptProcess, cts.Token),
-            ListenProcessStandardErrorAsync(scriptProcess, cts.Token));
+            scriptProcess.ListenProcessStandardOutputAsync(cts.Token),
+            scriptProcess.ListenProcessStandardErrorAsync(cts.Token));
         await cts.CancelAsync();
         cts = new();
     }
 
     [GeneratedRegex("\"(.*?)\"")]
     private static partial Regex ValueRegex();
-
-    private async Task ListenProcessStandardOutputAsync(Process process, CancellationToken cancellationToken = default)
-    {
-        while (true)
-        {
-            var line = await process.StandardOutput.ReadLineAsync(cancellationToken);
-            if (cancellationToken.IsCancellationRequested) break;
-            if (!string.IsNullOrWhiteSpace(line)) Log.Information(line);
-        }
-    }
-    
-    private async Task ListenProcessStandardErrorAsync(Process process, CancellationToken cancellationToken = default)
-    {
-        while (true)
-        {
-            var line = await process.StandardError.ReadLineAsync(cancellationToken);
-            if (cancellationToken.IsCancellationRequested) break;
-            if (string.IsNullOrWhiteSpace(line)) continue;
-            if (line.Length > 27)
-            {
-                if (line[..28].Contains("INF")) Log.Information(line);
-                else if (line[..28].Contains("WAR")) Log.Warning(line);
-                else Log.Error(line);
-            }
-            else Log.Error(line);
-        }
-    }
     
     private void ReleaseUnmanagedResources()
     {
