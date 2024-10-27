@@ -1,8 +1,10 @@
 ﻿using System.IO;
+using System.Net.Http;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using System.Windows;
+using CyberBonsaiManager.GameUpdater;
 using CyberBonsaiManager.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +23,9 @@ public partial class App : Application
     public App()
     {
         Services = new ServiceCollection()
+            .AddSingleton<HttpClientHandler>(_ => new HttpClientHandler{AllowAutoRedirect = false})
+            .AddSingleton<HttpClient>()
+            .AddTransient<ArknightsUpdater>()
             .AddSingleton<MainWindow>(sp => new MainWindow{DataContext = sp.GetRequiredService<MainWindowViewModel>()})
             .AddSingleton<MainWindowViewModel>()
             .AddSingleton<JsonSerializerOptions>(_ => new JsonSerializerOptions
