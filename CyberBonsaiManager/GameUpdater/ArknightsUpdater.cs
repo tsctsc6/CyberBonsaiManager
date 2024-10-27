@@ -46,9 +46,9 @@ public class ArknightsUpdater
             await DownloadAsync(result.FileUri, newFilePath);
             await InstallAsync(newFilePath);
             var jsonNode = JsonNode.Parse(await File.ReadAllTextAsync(GameVersionPath));
-            var oldFilePath = Path.Combine(DownloadPath, jsonNode!["lastest_filename"]?.GetValue<string>());
+            var oldFilePath = Path.Combine(DownloadPath, jsonNode!["Arknights"]?.GetValue<string>());
             if (File.Exists(oldFilePath)) File.Delete(oldFilePath);
-            jsonNode!["lastest_filename"] = result.OriginalFileName;
+            jsonNode!["Arknights"] = result.OriginalFileName;
             await File.WriteAllTextAsync(GameVersionPath,
                 jsonNode.ToJsonString(App.Current.Services.GetRequiredService<JsonSerializerOptions>()));
         }
