@@ -91,6 +91,11 @@ public class ArknightsUpdater
 
     public async Task DownloadAsync(string uri, string filePath)
     {
+        if (File.Exists(filePath))
+        {
+            Log.Information("已下载");
+            return;
+        }
         var resp = await _client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
         resp.EnsureSuccessStatusCode();
         var totalBytes = resp.Content.Headers.ContentLength;
