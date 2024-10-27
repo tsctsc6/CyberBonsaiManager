@@ -31,6 +31,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         VariantsAnalyzer analyzer = new();
         var targetTaskSection = analyzer.Analyze(App.Current.Services.GetRequiredService<IConfigurationRoot>()
             .GetRequiredSection("target_task"));
+        Log.Information("打开配置文件: {c}", targetTaskSection["path"]);
         try
         {
             var configuration = new ConfigurationBuilder()
