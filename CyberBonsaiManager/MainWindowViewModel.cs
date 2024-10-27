@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CyberBonsaiManager.GameUpdater;
 using CyberBonsaiManager.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                     case "EmulatorStartup": await EmulatorStartupHandlerAsync(task); break;
                     case "Sleep": await SleepHandlerAsync(task); break;
                     case "Script": await ScriptHandlerAsync(task); break;
+                    case "ArknightsUpdate": await ArknightsUpdateHandlerAsync(); break;
                     case "CloseApp": CloseAppHandler(task); break;
                 }
             }
@@ -69,6 +71,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             Log.Fatal(e, "Error:");
             throw;
         }
+    }
+
+    private async Task ArknightsUpdateHandlerAsync()
+    {
+        await App.Current.Services.GetRequiredService<ArknightsUpdater>().UpdateAsync();
     }
 
     private void CloseAppHandler(IConfigurationSection task)
