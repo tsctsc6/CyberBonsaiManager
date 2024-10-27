@@ -147,6 +147,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         };
         emulatorProcess.Start();
         await WindowsHelper.MinimzeProcessMainWindowsAsync(emulatorProcess);
+        await Task.Delay(App.Current.Services.GetRequiredService<IConfigurationRoot>().GetValue<int>("emulator:wait_time_in_ms"));
     }
 
     private async Task ScriptHandlerAsync(IConfigurationSection task)
