@@ -11,19 +11,11 @@ public class VariantsAnalyzer
         {
             try
             {
-                if (!AnalyzeConditions(item.GetRequiredSection("conditions"))) continue;
-                index = i;
-                break;
-            }
-            catch (InvalidOperationException)
-            {
-            }
-            try
-            {
                 if (!AnalyzeCondition(item.GetRequiredSection("condition"))) continue;
             }
             catch (InvalidOperationException)
             {
+                continue;
             }
             index = i;
             break;
@@ -52,11 +44,41 @@ public class VariantsAnalyzer
 
     private bool AnalyzeCondition(IConfigurationSection section)
     {
-        return true;
+        var result = section["type"] switch
+        {
+            "And" => AndConditions(section.GetSection("conditions").GetChildren()),
+            "Or" => OrConditions(section.GetSection("conditions").GetChildren()),
+            "Time" => TimeCondition(section["start"], section["end"]),
+            "True" => true,
+            _ => false
+        };
+        if (section.GetValue<bool>("invert")) return !result;
+        return result;
     }
-    
-    private bool AnalyzeConditions(IConfigurationSection section)
+
+    private bool OrConditions(IEnumerable<IConfigurationSection> children)
     {
-        return true;
+        return children.Aggregate(false, (current, item) => current || AnalyzeCondition(item));
+    }
+
+    private bool AndConditions(IEnumerable<IConfigurationSection> children)
+    {
+        return children.Aggregate(true, (current, item) => current && AnalyzeCondition(item));
+    }
+
+    private bool TimeCondition(string? startString, string? endString)
+    {
+        var time = TimeOnly.FromDateTime(DateTime.Now);
+        if (!TimeOnly.TryParse(startString, out var start)) start = default;
+        if (!TimeOnly.TryParse(endString, out var end)) end = default;
+        if (start > end)
+        {
+            if (start <= time || time <= end) return true;
+        }
+        else
+        {
+            if (start <= time && time <= end) return true;
+        }
+        return false;
     }
 }
