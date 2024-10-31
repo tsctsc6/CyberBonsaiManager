@@ -32,7 +32,7 @@ public class ObservableCollectionSink : ILogEventSink, IDisposable
             LogEventLevel.Debug => Brushes.Black,
             LogEventLevel.Verbose => Brushes.Black,
             LogEventLevel.Information => Brushes.Black,
-            LogEventLevel.Warning => Brushes.Yellow,
+            LogEventLevel.Warning => Brushes.Gold,
             LogEventLevel.Error => Brushes.Red,
             LogEventLevel.Fatal => Brushes.Red,
             _ => throw new ArgumentOutOfRangeException()
