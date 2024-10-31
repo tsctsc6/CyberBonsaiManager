@@ -109,26 +109,25 @@ public class ArknightsUpdater
         var delayPerBufferInSeconds_d = BufferSize / maxBytesPerSecond;
         int refreshCount = (int)(RefreshDelayInSeconds / delayPerBufferInSeconds_d);
         var delayPerBufferInSeconds = TimeSpan.FromSeconds(delayPerBufferInSeconds_d * refreshCount);
-        Stopwatch stopwatch = new();
         Log.Information("开始下载");
         while (true)
         {
-            stopwatch.Restart();
+            var start = Stopwatch.GetTimestamp();
             await Task.WhenAll(MoveAsync(contentStream, buffer, fileStream, refreshCount),
                 Task.Delay(delayPerBufferInSeconds));
-            stopwatch.Stop();
+            var delta = Stopwatch.GetElapsedTime(start);
             totalBytesRead += bytesRead2;
             if (totalBytes.HasValue)
             {
                 // 计算并显示进度百分比
                 Console.Out.WriteAsync(
-                    $"\r{(double)totalBytesRead / 1024 / 1024:F2} MB, {(double)totalBytesRead / totalBytes.Value * 100:F2}%, {bytesRead2 / stopwatch.Elapsed.TotalSeconds / 1024 / 1024:F2} MB/s ");
+                    $"\r{(double)totalBytesRead / 1024 / 1024:F2} MB, {(double)totalBytesRead / totalBytes.Value * 100:F2}%, {bytesRead2 / delta.TotalSeconds / 1024 / 1024:F2} MB/s ");
             }
             else
             {
                 // 如果无法获取文件大小，只显示已下载字节数
                 Console.Out.WriteAsync(
-                    $"\r{(double)totalBytesRead / 1024 / 1024:F2} MB, {bytesRead2 / stopwatch.Elapsed.TotalSeconds / 1024 / 1024:F2} MB/s ");
+                    $"\r{(double)totalBytesRead / 1024 / 1024:F2} MB, {bytesRead2 / delta.TotalSeconds / 1024 / 1024:F2} MB/s ");
             }
 
             if (bytesRead == 0) break;
