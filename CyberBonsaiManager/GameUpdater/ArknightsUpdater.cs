@@ -197,7 +197,7 @@ public class ArknightsUpdater
                 StartInfo = new()
                 {
                     FileName = App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:adb_path"],
-                    Arguments = $"-s {App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:connection_address"]} install \"{filePath}\"",
+                    Arguments = $"-s {App.Current.Services.GetRequiredService<IConfigurationRoot>()["emulator:connection_address"]} install -r \"{filePath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
