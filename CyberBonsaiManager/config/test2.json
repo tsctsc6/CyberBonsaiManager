@@ -2,7 +2,19 @@
   "tasks": [
     {
       "name": "检查网络状态",
-      "type": "TestConnectionStatus"
+      "type": "TestConnectionStatus",
+      "uris": [
+        {
+          "uri": "http://www.msftconnecttest.com/connecttest.txt",
+          "retry_count": 1,
+          "retry_interval_ms": 10000
+        },
+        {
+          "uri": "https://github.com/",
+          "retry_count": 3,
+          "retry_interval_ms": 10000
+        }
+      ]
     },
     {
       "name": "检查明日方舟更新",

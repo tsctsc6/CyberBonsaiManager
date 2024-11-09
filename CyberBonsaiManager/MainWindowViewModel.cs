@@ -97,15 +97,26 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task TestConnectionStatusHandlerAsync(IConfigurationSection task)
     {
-        Log.Information("正在检测网络连接...");
-        var resp = await client.GetAsync("http://www.msftconnecttest.com/connecttest.txt");
-        try
+        bool canConnectUri = false;
+        var uris = task.GetSection("uris").GetChildren();
+        foreach (var item in uris)
         {
-            resp.EnsureSuccessStatusCode();
-        }
-        catch (HttpRequestException)
-        {
-            throw new Exception("无网络连接!");
+            for (int i = 0; i < item.GetValue<int>("retry_count"); i++)
+            {
+                Log.Information($"正在检测网络连接: {item["uri"]}, {i + 1}");
+                var resp = await client.GetAsync(item["uri"], HttpCompletionOption.ResponseHeadersRead);
+                try
+                {
+                    resp.EnsureSuccessStatusCode();
+                    canConnectUri = true;
+                    break;
+                }
+                catch (HttpRequestException)
+                {
+                    await Task.Delay(item.GetValue<int>("retry_interval"));
+                }
+            }
+            if (!canConnectUri) throw new Exception("无网络连接!");
         }
     }
 
