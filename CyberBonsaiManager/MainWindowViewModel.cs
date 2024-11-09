@@ -97,10 +97,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task TestConnectionStatusHandlerAsync(IConfigurationSection task)
     {
-        bool canConnectUri = false;
         var uris = task.GetSection("uris").GetChildren();
         foreach (var item in uris)
         {
+            bool canConnectUri = false;
             for (int i = 0; i < item.GetValue<int>("retry_count"); i++)
             {
                 Log.Information($"正在检测网络连接: {item["uri"]}, {i + 1}");
